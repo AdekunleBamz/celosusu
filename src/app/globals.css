@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-body);
+}
+
+body {
+  background: linear-gradient(135deg, #1A1207 0%, #2D1F0F 50%, #1A1207 100%);
+  min-height: 100vh;
+  color: #FFF8E7;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1A1207;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #F5A623;
+  border-radius: 3px;
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #3D2914 25%, #5A3D1F 50%, #3D2914 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes pulse-gold {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 15px rgba(245, 166, 35, 0);
+  }
+}
+
+.pulse-gold {
+  animation: pulse-gold 2s infinite;
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-susu-gold text-susu-dark font-semibold py-3 px-6 rounded-xl;
+  @apply hover:bg-susu-amber transition-all duration-200;
+  @apply active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply bg-transparent border-2 border-susu-gold text-susu-gold font-semibold py-3 px-6 rounded-xl;
+  @apply hover:bg-susu-gold hover:text-susu-dark transition-all duration-200;
+  @apply active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-ghost {
+  @apply bg-white/5 text-susu-cream font-medium py-2 px-4 rounded-lg;
+  @apply hover:bg-white/10 transition-all duration-200;
+}
+
+/* Card styles */
+.card {
+  @apply bg-gradient-to-br from-susu-brown/50 to-susu-dark/80;
+  @apply border border-susu-gold/20 rounded-2xl p-5;
+  @apply backdrop-blur-sm;
+}
+
+.card-hover {
+  @apply card transition-all duration-300;
+  @apply hover:border-susu-gold/40 hover:shadow-lg hover:shadow-susu-gold/10;
+}
+
+/* Input styles */
+.input {
+  @apply w-full bg-susu-dark/60 border border-susu-gold/30 rounded-xl px-4 py-3;
+  @apply text-susu-cream placeholder-susu-cream/50;
+  @apply focus:outline-none focus:border-susu-gold focus:ring-1 focus:ring-susu-gold/50;
+  @apply transition-all duration-200;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+}
+
+.badge-open {
+  @apply badge bg-celo-green/20 text-celo-green;
+}
+
+.badge-active {
+  @apply badge bg-susu-gold/20 text-susu-gold;
+}
+
+.badge-completed {
+  @apply badge bg-white/20 text-white/80;
+}
+
+/* Glass effect */
+.glass {
+  @apply bg-white/5 backdrop-blur-md border border-white/10;
+}
+
+/* Mobile touch optimization */
+@media (hover: none) {
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .card-hover:hover {
+    transform: none;
+  }
+}
+
+/* Safe area for mobile */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 20px);
+}
