@@ -12,7 +12,7 @@ interface CreateCircleModalProps {
 
 export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps) {
   const [name, setName] = useState('');
-  const [token, setToken] = useState(CONTRACTS.CUSD);
+  const [token, setToken] = useState<string>(CONTRACTS.CUSD);
   const [contribution, setContribution] = useState('10');
   const [yieldEnabled, setYieldEnabled] = useState(true);
   const [error, setError] = useState('');
