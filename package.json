@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@farcaster/miniapp-sdk": "latest",
     "@selfxyz/core": "latest",
     "@selfxyz/qrcode": "latest",
     "@tanstack/react-query": "^5.59.0",

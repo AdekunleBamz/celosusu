@@ -1,6 +1,6 @@
 import { http, createConfig, createStorage } from 'wagmi';
 import { celo } from 'wagmi/chains';
-import { injected, metaMask } from 'wagmi/connectors';
+import { injected, walletConnect } from 'wagmi/connectors';
 
 // Celo Mainnet configuration
 export const celoMainnet = {
@@ -21,6 +21,13 @@ export const isFarcasterFrame = () => {
   return window.parent !== window || window.location !== window.parent.location;
 };
 
+// Get WalletConnect project ID from environment
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+
+if (!projectId) {
+  console.warn('WalletConnect project ID is not set. Please add NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID to your .env.local file');
+}
+
 // Create wagmi config with multiple connectors
 export const config = createConfig({
   chains: [celoMainnet],
@@ -28,12 +35,16 @@ export const config = createConfig({
     injected({
       shimDisconnect: true,
     }),
-    metaMask({
-      dappMetadata: {
+    ...(projectId ? [walletConnect({
+      projectId,
+      metadata: {
         name: 'CeloSusu',
+        description: 'Decentralized Savings Circles on Celo',
         url: typeof window !== 'undefined' ? window.location.origin : 'https://celosusu.app',
+        icons: ['https://celosusu.app/icon.png'],
       },
-    }),
+      showQrModal: true,
+    })] : []),
   ],
   storage: createStorage({
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
