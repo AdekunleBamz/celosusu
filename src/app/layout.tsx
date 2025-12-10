@@ -3,8 +3,8 @@ import { Providers } from '@/providers/WagmiProvider';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'CeloSusu - Savings Circles on Celo',
-  description: 'Join decentralized savings circles (Ajo/Esusu) on Celo. Pool funds with friends, earn yield, and build financial community.',
+  title: 'CeloSusu Savings Circles',
+  description: 'Join rotating savings circles on Celo. Save together, support each other, build resilience.',
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
@@ -12,21 +12,30 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   openGraph: {
-    title: 'CeloSusu - Savings Circles',
-    description: 'Decentralized rotating savings circles on Celo blockchain',
-    images: ['/og-image.png'],
+    title: 'CeloSusu Savings Circles',
+    description: 'Join rotating savings circles on Celo. Save together, support each other, build resilience.',
+    url: 'https://celosusu.vercel.app',
+    siteName: 'CeloSusu',
+    images: [{
+      url: 'https://celosusu.vercel.app/og-image.png',
+      width: 1200,
+      height: 630,
+      alt: 'CeloSusu - Community Savings Circles'
+    }],
+    type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'CeloSusu - Savings Circles',
-    description: 'Decentralized rotating savings circles on Celo blockchain',
+    title: 'CeloSusu Savings Circles',
+    description: 'Join rotating savings circles on Celo. Save together, support each other, build resilience.',
+    images: ['https://celosusu.vercel.app/og-image.png'],
   },
   other: {
     'fc:frame': 'vNext',
-    'fc:frame:image': '/og-image.png',
+    'fc:frame:image': 'https://celosusu.vercel.app/og-image.png',
     'fc:frame:button:1': 'Join Savings Circle',
     'fc:frame:button:1:action': 'link',
-    'fc:frame:button:1:target': 'https://your-domain.com',
+    'fc:frame:button:1:target': 'https://celosusu.vercel.app',
   },
 };
 
