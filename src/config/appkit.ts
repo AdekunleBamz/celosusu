@@ -1,9 +1,10 @@
 'use client';
 
-import { cookieStorage, createStorage } from '@wagmi/core';
+import { cookieStorage, createStorage, http } from '@wagmi/core';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { celo } from '@reown/appkit/networks';
 import type { AppKitNetwork } from '@reown/appkit/networks';
+import { farcasterMiniApp } from '@farcaster/miniapp-wagmi-connector';
 
 // Get WalletConnect project ID from environment
 export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
@@ -25,7 +26,10 @@ export const celoMainnet = {
 // Define the networks with proper tuple type
 export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [celoMainnet];
 
-// Create Wagmi Adapter with AppKit
+// Create Farcaster miniapp connector
+const farcasterConnector = farcasterMiniApp();
+
+// Create Wagmi Adapter with AppKit + Farcaster connector
 export const wagmiAdapter = new WagmiAdapter({
   storage: createStorage({
     storage: cookieStorage,
@@ -33,7 +37,12 @@ export const wagmiAdapter = new WagmiAdapter({
   ssr: true,
   projectId: projectId || '',
   networks,
+  // Add Farcaster connector as a custom connector
+  connectors: [farcasterConnector],
 });
 
 // Export the wagmi config
 export const config = wagmiAdapter.wagmiConfig;
+
+// Export Farcaster connector for direct access
+export { farcasterConnector };
