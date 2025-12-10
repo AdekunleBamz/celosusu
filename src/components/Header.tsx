@@ -12,6 +12,7 @@ import { WalletModal } from './WalletModal';
 
 export function Header() {
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const { address, isConnected } = useAccount();
   const { connectWallet, disconnect, isConnecting, error } = useFarcasterFrame();
   
@@ -27,8 +28,8 @@ export function Header() {
   };
 
   const handleDisconnect = () => {
-    console.log('Disconnect clicked');
     disconnect();
+    setShowDropdown(false);
   };
 
   return (
@@ -63,13 +64,43 @@ export function Header() {
                 </div>
               )}
               
-              {/* Address Button */}
-              <button
-                onClick={handleDisconnect}
-                className="btn-ghost text-sm"
-              >
-                {formatAddress(address)}
-              </button>
+              {/* Address Button with Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="btn-ghost text-sm flex items-center gap-2"
+                >
+                  <span>{formatAddress(address)}</span>
+                  <span className="text-xs">▼</span>
+                </button>
+                
+                {/* Dropdown Menu */}
+                {showDropdown && (
+                  <>
+                    {/* Backdrop */}
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setShowDropdown(false)}
+                    />
+                    
+                    {/* Menu */}
+                    <div className="absolute right-0 mt-2 w-48 rounded-xl bg-susu-brown border border-susu-gold/20 shadow-xl z-50">
+                      <div className="p-2">
+                        <div className="px-3 py-2 border-b border-susu-gold/10">
+                          <p className="text-xs text-susu-cream/60">Connected</p>
+                          <p className="text-sm text-susu-cream font-mono">{formatAddress(address)}</p>
+                        </div>
+                        <button
+                          onClick={handleDisconnect}
+                          className="w-full mt-2 px-3 py-2 text-left text-sm text-susu-error hover:bg-susu-error/10 rounded-lg transition-colors"
+                        >
+                          🔌 Disconnect
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-end">
