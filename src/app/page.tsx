@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
-import { useFarcasterFrame } from '@/hooks/useFarcaster';
+import { useWallet } from '@/hooks/useWallet';
 import { useFarcasterSDK } from '@/hooks/useFarcasterSDK';
 import { useUserCircles, useOpenCircles, useTotalCircles } from '@/hooks/useContracts';
 import { Header } from '@/components/Header';
@@ -18,9 +17,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('discover');
   const [showCreateModal, setShowCreateModal] = useState(false);
   
-  const { autoConnect, isConnecting, connectWallet } = useFarcasterFrame();
+  const { address, isConnected, isConnecting, connectWallet } = useWallet();
   const { context: sdkContext, isReady: sdkReady } = useFarcasterSDK();
-  const { address, isConnected } = useAccount();
   
   // Fetch data
   const { data: userCircles, isLoading: loadingUserCircles, refetch: refetchUserCircles } = useUserCircles(address);
@@ -31,9 +29,9 @@ export default function Home() {
   useEffect(() => {
     if (sdkContext.isSDK && sdkReady && !isConnected && !isConnecting) {
       console.log('In Farcaster miniapp, auto-connecting wallet...');
-      autoConnect();
+      connectWallet();
     }
-  }, [sdkContext.isSDK, sdkReady, isConnected, isConnecting, autoConnect]);
+  }, [sdkContext.isSDK, sdkReady, isConnected, isConnecting, connectWallet]);
 
   const handleCreateSuccess = () => {
     setShowCreateModal(false);

@@ -1,9 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccount } from 'wagmi';
-import { useFarcasterFrame } from '@/hooks/useFarcaster';
-import { formatAddress } from '@/config/wagmi';
+import { useWallet, formatAddress } from '@/hooks/useWallet';
 import { useTokenBalance } from '@/hooks/useContracts';
 import { CONTRACTS } from '@/config/contracts';
 import { formatTokenAmount } from '@/config/wagmi';
@@ -11,13 +9,12 @@ import { LoadingSpinner } from './LoadingSpinner';
 
 export function Header() {
   const [showDropdown, setShowDropdown] = useState(false);
-  const { address, isConnected } = useAccount();
-  const { connectWallet, disconnect, isConnecting, error } = useFarcasterFrame();
+  const { address, isConnected, isConnecting, error, connectWallet, disconnectWallet, openAccount } = useWallet();
   
   const { data: cusdBalance } = useTokenBalance(CONTRACTS.CUSD, address);
 
   const handleDisconnect = () => {
-    disconnect();
+    disconnectWallet();
     setShowDropdown(false);
   };
 
