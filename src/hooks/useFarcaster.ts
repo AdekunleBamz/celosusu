@@ -125,17 +125,13 @@ export function useFarcasterFrame() {
   }, [connect, connectors, isConnected, isConnecting]);
 
   // Connect wallet - defaults to WalletConnect for best UX
-  const connectWallet = useCallback(async () => {
-    if (isConnecting) return;
-    
-    setError(null);
-    setIsConnecting(true);
-    
+  const connectWallet = useCallback(() => {
     try {
+      setError(null);
+      
       // If no connectors available
-      if (connectors.length === 0) {
+      if (!connectors || connectors.length === 0) {
         setError('No wallet connectors available');
-        setIsConnecting(false);
         return;
       }
       
@@ -144,29 +140,26 @@ export function useFarcasterFrame() {
         const farcasterConnector = connectors.find(c => c.id === 'farcaster');
         if (farcasterConnector) {
           console.log('Using Farcaster wallet');
-          await connect({ connector: farcasterConnector, chainId: celoMainnet.id });
-          setIsConnecting(false);
+          connect({ connector: farcasterConnector, chainId: celoMainnet.id });
           return;
         }
       }
       
       // Otherwise, use WalletConnect (it has the best UX with built-in wallet selection)
-      const walletConnectConnector = connectors.find(c => c.id.includes('walletConnect'));
+      const walletConnectConnector = connectors.find(c => c.id?.includes('walletConnect'));
       if (walletConnectConnector) {
         console.log('Using WalletConnect');
-        await connect({ connector: walletConnectConnector, chainId: celoMainnet.id });
+        connect({ connector: walletConnectConnector, chainId: celoMainnet.id });
       } else {
         // Fallback to first available connector
-        await connect({ connector: connectors[0], chainId: celoMainnet.id });
+        connect({ connector: connectors[0], chainId: celoMainnet.id });
       }
       
     } catch (err: any) {
       console.error('Connect failed:', err);
       setError(err?.message || 'Connection failed. Please try again.');
-    } finally {
-      setIsConnecting(false);
     }
-  }, [connect, connectors, isConnecting, context.isInFrame]);
+  }, [connect, connectors, context.isInFrame]);
 
   return {
     context,
