@@ -62,7 +62,7 @@ export function useFarcasterSDK() {
   const composeCast = (text: string, embeds?: string[]) => {
     sdk.actions.composeCast({
       text,
-      embeds: embeds || [],
+      ...(embeds && embeds.length > 0 ? { embeds: embeds as [string] | [string, string] } : {}),
     });
   };
 
