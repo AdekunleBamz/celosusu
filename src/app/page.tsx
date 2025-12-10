@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useWallet } from '@/hooks/useWallet';
+import { useFarcasterSDK } from '@/hooks/useFarcasterSDK';
 import { useUserCircles, useOpenCircles, useTotalCircles } from '@/hooks/useContracts';
 import { Header } from '@/components/Header';
 import { CircleCard } from '@/components/CircleCard';
@@ -17,6 +18,9 @@ export default function Home() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   
   const { address, isConnected, isConnecting, connectWallet } = useWallet();
+  
+  // Initialize Farcaster SDK - calls ready() when in miniapp context
+  useFarcasterSDK();
   
   // Fetch data
   const { data: userCircles, isLoading: loadingUserCircles, refetch: refetchUserCircles } = useUserCircles(address);
