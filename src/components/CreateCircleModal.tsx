@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useCreateCircle } from '@/hooks/useContracts';
 import { CONTRACTS, TOKENS } from '@/config/contracts';
 import { LoadingSpinner } from './LoadingSpinner';
+import { formatContractError } from '@/utils/errors';
 
 interface CreateCircleModalProps {
   onClose: () => void;
@@ -27,7 +28,7 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
 
   useEffect(() => {
     if (txError) {
-      setError(txError.message || 'Transaction failed');
+      setError(formatContractError(txError));
     }
   }, [txError]);
 
