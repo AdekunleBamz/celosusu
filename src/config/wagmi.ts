@@ -43,6 +43,9 @@ export const config = createConfig({
         icons: ['https://celosusu.vercel.app/icon.png'],
       },
       showQrModal: true,
+      qrModalOptions: {
+        themeMode: 'dark',
+      }
     })] : []),
     coinbaseWallet({
       appName: 'CeloSusu',
