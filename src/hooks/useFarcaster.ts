@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useConnect, useAccount, useDisconnect, Connector } from 'wagmi';
+import { useConnect, useAccount, useDisconnect, useSwitchChain, Connector } from 'wagmi';
+import { celoMainnet } from '@/config/wagmi';
 
 // Farcaster Frame SDK types
 interface FarcasterUser {
@@ -27,8 +28,9 @@ export function useFarcasterFrame() {
   const [error, setError] = useState<string | null>(null);
 
   const { connect, connectors, status, error: connectError } = useConnect();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
   const { disconnect } = useDisconnect();
+  const { switchChain } = useSwitchChain();
 
   // Check if we're in a Farcaster frame
   useEffect(() => {
@@ -84,6 +86,25 @@ export function useFarcasterFrame() {
     }
   }, [connectError]);
 
+  // Monitor chain and enforce Celo mainnet
+  useEffect(() => {
+    if (isConnected && chain && chain.id !== celoMainnet.id && switchChain) {
+      // User is connected but on wrong network
+      setError('Please switch to Celo mainnet');
+      // Auto-attempt to switch chain
+      try {
+        switchChain({ chainId: celoMainnet.id });
+      } catch (err) {
+        console.error('Auto chain switch failed:', err);
+      }
+    } else if (isConnected && chain && chain.id === celoMainnet.id) {
+      // Clear error if we're on the correct chain
+      if (error === 'Please switch to Celo mainnet') {
+        setError(null);
+      }
+    }
+  }, [isConnected, chain, switchChain, error]);
+
   // Auto-connect wallet in frame context
   const autoConnect = useCallback(async () => {
     if (isConnected || isConnecting || connectors.length === 0) return;
@@ -99,29 +120,51 @@ export function useFarcasterFrame() {
     }
   }, [connect, connectors, isConnected, isConnecting]);
 
-  // Connect wallet manually
+  // Connect wallet manually with chain enforcement
   const connectWallet = useCallback(async () => {
-    if (isConnecting || connectors.length === 0) return;
+    if (isConnecting) return;
     
     setError(null);
+    setIsConnecting(true);
     
     try {
-      // Find the best connector (prefer injected/MetaMask)
-      let connector: Connector | undefined = connectors.find(c => c.id === 'injected');
+      // If no connectors available
+      if (connectors.length === 0) {
+        setError('No wallet found. Please install MetaMask or another Web3 wallet');
+        setIsConnecting(false);
+        return;
+      }
       
+      // Try to find injected connector first (MetaMask, etc.)
+      let connector = connectors.find(c => c.id === 'injected' || c.type === 'injected');
+      
+      // If no injected, try WalletConnect
+      if (!connector) {
+        connector = connectors.find(c => c.id === 'walletConnect' || c.type === 'walletConnect');
+      }
+      
+      // Fallback to first available
       if (!connector) {
         connector = connectors[0];
       }
       
-      if (connector) {
-        console.log('Connecting with:', connector.name);
-        connect({ connector });
-      } else {
+      if (!connector) {
         setError('No wallet connector available');
+        setIsConnecting(false);
+        return;
       }
+      
+      console.log('Attempting connection with:', connector.name);
+      
+      // Connect to wallet with Celo mainnet chain ID
+      await connect({ connector, chainId: celoMainnet.id });
+      
+      // Note: Chain switching will be handled by the useEffect monitoring chain changes
     } catch (err: any) {
       console.error('Connect failed:', err);
-      setError(err?.message || 'Connection failed');
+      setError(err?.message || 'Connection failed. Please try again.');
+    } finally {
+      setIsConnecting(false);
     }
   }, [connect, connectors, isConnecting]);
 

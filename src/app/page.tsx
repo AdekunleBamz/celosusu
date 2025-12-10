@@ -67,7 +67,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Connect Button */}
+          {/* Get Started Button */}
           <button
             onClick={() => connectWallet()}
             disabled={isConnecting}
@@ -80,8 +80,8 @@ export default function Home() {
               </>
             ) : (
               <>
-                <span>🔗</span>
-                <span>Connect Wallet</span>
+                <span>🚀</span>
+                <span>Get Started</span>
               </>
             )}
           </button>
