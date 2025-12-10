@@ -37,6 +37,20 @@ export const metadata: Metadata = {
       button: {
         title: "🚀 Join Circle",
         action: {
+          type: "launch_miniapp",
+          name: "CeloSusu",
+          url: "https://celosusu.vercel.app",
+          splashImageUrl: "https://celosusu.vercel.app/icon.png",
+          splashBackgroundColor: "#1A1207"
+        }
+      }
+    }),
+    'fc:frame': JSON.stringify({
+      version: "1",
+      imageUrl: "https://celosusu.vercel.app/og-image.png",
+      button: {
+        title: "🚀 Join Circle",
+        action: {
           type: "launch_frame",
           name: "CeloSusu",
           url: "https://celosusu.vercel.app",
@@ -45,7 +59,6 @@ export const metadata: Metadata = {
         }
       }
     }),
-    'fc:frame': 'vNext',
   },
 };
 
