@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { useFarcasterFrame } from '@/hooks/useFarcaster';
+import { useFarcasterSDK } from '@/hooks/useFarcasterSDK';
 import { useUserCircles, useOpenCircles, useTotalCircles } from '@/hooks/useContracts';
 import { Header } from '@/components/Header';
 import { CircleCard } from '@/components/CircleCard';
@@ -20,6 +21,7 @@ export default function Home() {
   const [showWalletModal, setShowWalletModal] = useState(false);
   
   const { context, autoConnect, isConnecting, connectWallet, error } = useFarcasterFrame();
+  const { context: sdkContext, isReady: sdkReady } = useFarcasterSDK();
   const { address, isConnected } = useAccount();
   
   // Fetch data
@@ -27,12 +29,13 @@ export default function Home() {
   const { data: openCircles, isLoading: loadingOpenCircles, refetch: refetchOpenCircles } = useOpenCircles(0, 50);
   const { data: totalCircles } = useTotalCircles();
 
-  // Auto-connect in Farcaster frame
+  // Auto-connect in Farcaster miniapp
   useEffect(() => {
-    if (context.isInFrame && context.ready && !isConnected) {
+    if (sdkContext.isSDK && sdkReady && !isConnected && !isConnecting) {
+      console.log('In Farcaster miniapp, auto-connecting wallet...');
       autoConnect();
     }
-  }, [context, isConnected, autoConnect]);
+  }, [sdkContext.isSDK, sdkReady, isConnected, isConnecting, autoConnect]);
 
   const handleCreateSuccess = () => {
     setShowCreateModal(false);

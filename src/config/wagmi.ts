@@ -1,6 +1,7 @@
 import { http, createConfig, createStorage } from 'wagmi';
 import { celo } from 'wagmi/chains';
 import { injected, walletConnect } from 'wagmi/connectors';
+import { farcasterMiniApp } from '@farcaster/miniapp-wagmi-connector';
 
 // Celo Mainnet configuration
 export const celoMainnet = {
@@ -29,9 +30,11 @@ if (!projectId) {
 }
 
 // Create wagmi config with multiple connectors
+// Farcaster miniapp connector takes priority when inside Farcaster
 export const config = createConfig({
   chains: [celoMainnet],
   connectors: [
+    farcasterMiniApp(),
     injected({
       shimDisconnect: true,
     }),
@@ -40,8 +43,8 @@ export const config = createConfig({
       metadata: {
         name: 'CeloSusu',
         description: 'Decentralized Savings Circles on Celo',
-        url: typeof window !== 'undefined' ? window.location.origin : 'https://celosusu.app',
-        icons: ['https://celosusu.app/icon.png'],
+        url: typeof window !== 'undefined' ? window.location.origin : 'https://celosusu.vercel.app',
+        icons: ['https://celosusu.vercel.app/icon.png'],
       },
       showQrModal: true,
     })] : []),

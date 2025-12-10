@@ -111,9 +111,13 @@ export function useFarcasterFrame() {
 
     try {
       setError(null);
-      const connector = connectors[0];
+      // Prioritize Farcaster miniapp connector when inside Farcaster
+      const farcasterConnector = connectors.find(c => c.id === 'farcaster');
+      const connector = farcasterConnector || connectors[0];
+      
       if (connector) {
-        connect({ connector });
+        console.log('Auto-connecting with:', connector.name);
+        connect({ connector, chainId: celoMainnet.id });
       }
     } catch (err) {
       console.error('Auto-connect failed:', err);
@@ -137,11 +141,18 @@ export function useFarcasterFrame() {
       
       let connector: Connector | undefined = selectedConnector;
       
-      // If no specific connector selected, this means the modal should be shown
-      // The calling component will handle showing the modal
+      // If no specific connector selected, check if we're in Farcaster and auto-select
       if (!connector) {
-        setIsConnecting(false);
-        return;
+        // Try Farcaster connector first
+        const farcasterConnector = connectors.find(c => c.id === 'farcaster');
+        if (farcasterConnector && context.isInFrame) {
+          connector = farcasterConnector;
+          console.log('Using Farcaster miniapp wallet');
+        } else {
+          // Let the calling component handle showing the modal
+          setIsConnecting(false);
+          return;
+        }
       }
       
       console.log('Attempting connection with:', connector.name);
@@ -156,7 +167,7 @@ export function useFarcasterFrame() {
     } finally {
       setIsConnecting(false);
     }
-  }, [connect, connectors, isConnecting]);
+  }, [connect, connectors, isConnecting, context.isInFrame]);
 
   return {
     context,
