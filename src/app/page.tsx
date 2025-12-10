@@ -10,14 +10,16 @@ import { CreateCircleModal } from '@/components/CreateCircleModal';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { TabNav } from '@/components/TabNav';
+import { WalletModal } from '@/components/WalletModal';
 
 type Tab = 'my-circles' | 'discover' | 'create';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('discover');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
   
-  const { context, autoConnect, isConnecting, connectWallet } = useFarcasterFrame();
+  const { context, autoConnect, isConnecting, connectWallet, error } = useFarcasterFrame();
   const { address, isConnected } = useAccount();
   
   // Fetch data
@@ -37,6 +39,15 @@ export default function Home() {
     refetchUserCircles();
     refetchOpenCircles();
     setActiveTab('my-circles');
+  };
+
+  const handleGetStartedClick = () => {
+    setShowWalletModal(true);
+  };
+
+  const handleWalletSelect = (connector: any) => {
+    connectWallet(connector);
+    setShowWalletModal(false);
   };
 
   const renderContent = () => {
@@ -69,7 +80,7 @@ export default function Home() {
 
           {/* Get Started Button */}
           <button
-            onClick={() => connectWallet()}
+            onClick={handleGetStartedClick}
             disabled={isConnecting}
             className="btn-primary text-lg py-4 px-8 flex items-center gap-3"
           >
@@ -201,6 +212,16 @@ export default function Home() {
         <CreateCircleModal
           onClose={() => setShowCreateModal(false)}
           onSuccess={handleCreateSuccess}
+        />
+      )}
+
+      {/* Wallet Modal */}
+      {showWalletModal && (
+        <WalletModal
+          onClose={() => setShowWalletModal(false)}
+          onConnect={handleWalletSelect}
+          isConnecting={isConnecting}
+          error={error}
         />
       )}
     </main>

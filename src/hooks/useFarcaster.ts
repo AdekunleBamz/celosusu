@@ -121,7 +121,7 @@ export function useFarcasterFrame() {
   }, [connect, connectors, isConnected, isConnecting]);
 
   // Connect wallet manually with chain enforcement
-  const connectWallet = useCallback(async () => {
+  const connectWallet = useCallback(async (selectedConnector?: Connector) => {
     if (isConnecting) return;
     
     setError(null);
@@ -130,26 +130,16 @@ export function useFarcasterFrame() {
     try {
       // If no connectors available
       if (connectors.length === 0) {
-        setError('No wallet found. Please install MetaMask or another Web3 wallet');
+        setError('No wallet found. Please install a Web3 wallet or use WalletConnect');
         setIsConnecting(false);
         return;
       }
       
-      // Try to find injected connector first (MetaMask, etc.)
-      let connector = connectors.find(c => c.id === 'injected' || c.type === 'injected');
+      let connector: Connector | undefined = selectedConnector;
       
-      // If no injected, try WalletConnect
+      // If no specific connector selected, this means the modal should be shown
+      // The calling component will handle showing the modal
       if (!connector) {
-        connector = connectors.find(c => c.id === 'walletConnect' || c.type === 'walletConnect');
-      }
-      
-      // Fallback to first available
-      if (!connector) {
-        connector = connectors[0];
-      }
-      
-      if (!connector) {
-        setError('No wallet connector available');
         setIsConnecting(false);
         return;
       }

@@ -6,3 +6,4 @@ export { CreateCircleModal } from './CreateCircleModal';
 export { EmptyState } from './EmptyState';
 export { LoadingSpinner } from './LoadingSpinner';
 export { SelfVerification, useSelfVerified } from './SelfVerification';
+export { WalletModal } from './WalletModal';
