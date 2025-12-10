@@ -14,8 +14,8 @@
     "splashImageUrl": "https://celosusu.vercel.app/splash.png",
     "splashBackgroundColor": "#1A1207",
     "webhookUrl": "https://celosusu.vercel.app/api/webhook",
-    "subtitle": "Community-powered savings circles on Celo",
-    "description": "Join rotating savings circles with your community. Save together, support each other, and build financial resilience through traditional African Susu savings reimagined on blockchain.",
+    "subtitle": "Community savings on Celo",
+    "description": "Join rotating savings circles with your community. Save together, support each other, and build financial resilience through African Susu savings on blockchain.",
     "screenshotUrls": [
       "https://celosusu.vercel.app/screenshot1.png",
       "https://celosusu.vercel.app/screenshot2.png"
@@ -23,9 +23,9 @@
     "primaryCategory": "finance",
     "tags": ["finance", "savings", "defi", "community", "celo"],
     "heroImageUrl": "https://celosusu.vercel.app/hero.png",
-    "tagline": "Build wealth together through community savings",
-    "ogTitle": "CeloSusu - Community Savings Circles",
-    "ogDescription": "Join rotating savings circles on Celo blockchain. Save together, support each other, build financial resilience.",
+    "tagline": "Build wealth together",
+    "ogTitle": "CeloSusu Savings Circles",
+    "ogDescription": "Join rotating savings circles on Celo. Save together, support each other, build resilience.",
     "ogImageUrl": "https://celosusu.vercel.app/og-image.png",
     "castShareUrl": "https://celosusu.vercel.app"
   }
