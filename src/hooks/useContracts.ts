@@ -67,7 +67,7 @@ export function useTotalCircles() {
   });
 }
 
-// Hook to create a new circle
+// Hook to create a new circle - WITH EXPLICIT GAS LIMIT FOR FARCASTER
 export function useCreateCircle() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -79,11 +79,13 @@ export function useCreateCircle() {
     yieldEnabled: boolean
   ) => {
     const amount = parseTokenAmount(contributionAmount);
+    
     writeContract({
       address: CONTRACTS.SUSU_FACTORY as `0x${string}`,
       abi: SUSU_FACTORY_ABI,
       functionName: 'createCircle',
       args: [name, token as `0x${string}`, amount, yieldEnabled],
+      gas: BigInt(2000000), // Explicit gas limit - bypasses estimation
     });
   };
 
@@ -200,7 +202,7 @@ export function useCircleCreator(circleAddress: string | undefined) {
   });
 }
 
-// Hook to join circle
+// Hook to join circle - WITH EXPLICIT GAS LIMIT
 export function useJoinCircle() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -210,6 +212,7 @@ export function useJoinCircle() {
       address: circleAddress as `0x${string}`,
       abi: SUSU_CIRCLE_ABI,
       functionName: 'joinCircle',
+      gas: BigInt(500000),
     });
   };
 
@@ -226,6 +229,7 @@ export function useLeaveCircle() {
       address: circleAddress as `0x${string}`,
       abi: SUSU_CIRCLE_ABI,
       functionName: 'leaveCircle',
+      gas: BigInt(300000),
     });
   };
 
@@ -242,6 +246,7 @@ export function useStartCircle() {
       address: circleAddress as `0x${string}`,
       abi: SUSU_CIRCLE_ABI,
       functionName: 'startCircle',
+      gas: BigInt(500000),
     });
   };
 
@@ -259,13 +264,14 @@ export function useApproveToken() {
       abi: ERC20_ABI,
       functionName: 'approve',
       args: [spenderAddress as `0x${string}`, amount],
+      gas: BigInt(100000),
     });
   };
 
   return { approve, hash, isPending, isConfirming, isSuccess, error };
 }
 
-// Hook to contribute
+// Hook to contribute - WITH EXPLICIT GAS LIMIT
 export function useContribute() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -275,6 +281,7 @@ export function useContribute() {
       address: circleAddress as `0x${string}`,
       abi: SUSU_CIRCLE_ABI,
       functionName: 'contribute',
+      gas: BigInt(500000),
     });
   };
 
@@ -291,6 +298,7 @@ export function useClaimPayout() {
       address: circleAddress as `0x${string}`,
       abi: SUSU_CIRCLE_ABI,
       functionName: 'claimPayout',
+      gas: BigInt(500000),
     });
   };
 
