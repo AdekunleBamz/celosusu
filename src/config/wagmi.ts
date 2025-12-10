@@ -1,6 +1,6 @@
 import { http, createConfig, createStorage } from 'wagmi';
 import { celo } from 'wagmi/chains';
-import { injected, walletConnect } from 'wagmi/connectors';
+import { injected, walletConnect, coinbaseWallet, safe } from 'wagmi/connectors';
 import { farcasterMiniApp } from '@farcaster/miniapp-wagmi-connector';
 
 // Celo Mainnet configuration
@@ -30,14 +30,10 @@ if (!projectId) {
 }
 
 // Create wagmi config with multiple connectors
-// Farcaster miniapp connector takes priority when inside Farcaster
 export const config = createConfig({
   chains: [celoMainnet],
   connectors: [
     farcasterMiniApp(),
-    injected({
-      shimDisconnect: true,
-    }),
     ...(projectId ? [walletConnect({
       projectId,
       metadata: {
@@ -48,6 +44,14 @@ export const config = createConfig({
       },
       showQrModal: true,
     })] : []),
+    coinbaseWallet({
+      appName: 'CeloSusu',
+      appLogoUrl: 'https://celosusu.vercel.app/icon.png',
+    }),
+    injected({
+      shimDisconnect: true,
+    }),
+    safe(),
   ],
   storage: createStorage({
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
