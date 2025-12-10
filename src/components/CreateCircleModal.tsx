@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCreateCircle } from '@/hooks/useContracts';
 import { CONTRACTS, TOKENS } from '@/config/contracts';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -11,7 +11,7 @@ interface CreateCircleModalProps {
 }
 
 export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps) {
-  const [name, setName] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const [token, setToken] = useState<string>(CONTRACTS.CUSD);
   const [contribution, setContribution] = useState('10');
   const [yieldEnabled, setYieldEnabled] = useState(true);
@@ -33,14 +33,20 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setError('');
 
-    if (!name.trim()) {
+    // Get input value from DOM
+    const inputElement = document.getElementById('circle-name-input') as HTMLInputElement;
+    const name = inputElement?.value || nameInputRef.current?.value || '';
+    const trimmedName = name.trim();
+    
+    if (!trimmedName) {
       setError('Please enter a circle name');
       return;
     }
 
-    if (name.length > 50) {
+    if (trimmedName.length > 50) {
       setError('Name must be 50 characters or less');
       return;
     }
@@ -51,7 +57,7 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
       return;
     }
 
-    createCircle(name.trim(), token, contribution, yieldEnabled);
+    createCircle(trimmedName, token, contribution, yieldEnabled);
   };
 
   const tokenInfo = TOKENS[token as keyof typeof TOKENS];
@@ -59,7 +65,7 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
   return (
     <div className="fixed inset-0 z-50 bg-black/80" onClick={onClose}>
       <div 
-        className="absolute bottom-0 left-0 right-0 bg-gradient-to-b from-susu-brown to-susu-dark rounded-t-3xl"
+        className="absolute bottom-0 left-0 right-0 bg-gradient-to-b from-susu-brown to-susu-dark rounded-t-3xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle */}
@@ -85,18 +91,28 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
 
           {/* Circle Name */}
           <div className="mb-5">
-            <label className="block text-sm font-medium text-susu-cream/80 mb-2">
-              Circle Name
+            <label htmlFor="circle-name-input" className="block text-sm font-medium text-susu-cream/80 mb-2">
+              Circle Name *
             </label>
             <input
+              id="circle-name-input"
+              name="circleName"
+              ref={nameInputRef}
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              defaultValue=""
               placeholder="e.g., Family Savings, Friends Circle"
               maxLength={50}
-              className="input"
+              autoComplete="off"
+              spellCheck="false"
+              className={`input ${error === 'Please enter a circle name' ? 'border-susu-error' : ''}`}
+              onKeyDown={(e) => {
+                // Clear error on any key press
+                if (error === 'Please enter a circle name') {
+                  setError('');
+                }
+              }}
             />
-            <p className="text-xs text-susu-cream/50 mt-1">{name.length}/50</p>
+            <p className="text-xs text-susu-cream/50 mt-1">Max 50 characters</p>
           </div>
 
           {/* Token Selection */}
