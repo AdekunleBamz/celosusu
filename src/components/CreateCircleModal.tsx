@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useAccount, useBalance, useChainId } from 'wagmi';
 import { useCreateCircle } from '@/hooks/useContracts';
 import { CONTRACTS, TOKENS } from '@/config/contracts';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -18,6 +19,15 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
   const [yieldEnabled, setYieldEnabled] = useState(true);
   const [error, setError] = useState('');
 
+  // Debug info
+  const { address, isConnected, connector } = useAccount();
+  const chainId = useChainId();
+  const { data: celoBalance } = useBalance({ address });
+  const { data: cusdBalance } = useBalance({ 
+    address, 
+    token: CONTRACTS.CUSD as `0x${string}` 
+  });
+
   const { createCircle, isPending, isConfirming, isSuccess, error: txError } = useCreateCircle();
 
   useEffect(() => {
@@ -28,7 +38,9 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
 
   useEffect(() => {
     if (txError) {
-      setError(formatContractError(txError));
+      // Show full error for debugging
+      const fullError = txError.message || JSON.stringify(txError);
+      setError(`TX Error: ${fullError.slice(0, 200)}`);
     }
   }, [txError]);
 
@@ -36,6 +48,12 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
     e.preventDefault();
     e.stopPropagation();
     setError('');
+
+    // Validate chain
+    if (chainId !== 42220) {
+      setError(`Wrong chain! Connected to ${chainId}, need 42220 (Celo)`);
+      return;
+    }
 
     // Get input value from DOM
     const inputElement = document.getElementById('circle-name-input') as HTMLInputElement;
@@ -58,6 +76,9 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
       return;
     }
 
+    // Show what we're sending
+    setError(`Sending: name="${trimmedName}", token=${token.slice(0,10)}..., amount=${contribution}, yield=${yieldEnabled}`);
+    
     createCircle(trimmedName, token, contribution, yieldEnabled);
   };
 
@@ -77,7 +98,7 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
         {/* Content */}
         <form onSubmit={handleSubmit} className="px-5 pb-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-2xl font-bold text-susu-cream">
               Create Circle
             </h2>
@@ -88,6 +109,18 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
             >
               ×
             </button>
+          </div>
+
+          {/* DEBUG INFO BOX */}
+          <div className="mb-4 p-3 bg-gray-900/80 rounded-xl text-xs space-y-1 border border-yellow-500/50">
+            <p className="text-yellow-400 font-bold">🔧 Debug Info</p>
+            <p className={chainId === 42220 ? 'text-green-400' : 'text-red-400'}>
+              Chain: {chainId} {chainId === 42220 ? '✅' : '❌ WRONG!'}
+            </p>
+            <p className="text-gray-300">Connector: {connector?.name || 'None'}</p>
+            <p className="text-gray-300">CELO: {celoBalance?.formatted || '0'}</p>
+            <p className="text-gray-300">cUSD: {cusdBalance?.formatted || '0'}</p>
+            <p className="text-gray-300 break-all text-[10px]">Addr: {address}</p>
           </div>
 
           {/* Circle Name */}
@@ -107,7 +140,6 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
               spellCheck="false"
               className={`input ${error === 'Please enter a circle name' ? 'border-susu-error' : ''}`}
               onKeyDown={(e) => {
-                // Clear error on any key press
                 if (error === 'Please enter a circle name') {
                   setError('');
                 }
@@ -172,7 +204,7 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
               </span>
             </div>
             <div className="flex gap-2 mt-2">
-              {['5', '10', '25', '50', '100'].map((amount) => (
+              {['1', '5', '10', '25', '50'].map((amount) => (
                 <button
                   key={amount}
                   type="button"
@@ -218,29 +250,10 @@ export function CreateCircleModal({ onClose, onSuccess }: CreateCircleModalProps
             </div>
           </div>
 
-          {/* Preview */}
-          <div className="mb-6 p-4 rounded-xl bg-white/5">
-            <h4 className="text-sm font-medium text-susu-cream/60 mb-3">Preview</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-susu-cream/60">Weekly contribution</span>
-                <span className="text-susu-cream">{contribution} {tokenInfo?.symbol}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-susu-cream/60">Max pool (12 members)</span>
-                <span className="text-susu-cream">{parseFloat(contribution) * 12} {tokenInfo?.symbol}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-susu-cream/60">Cycle duration</span>
-                <span className="text-susu-cream">7 days</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Error */}
+          {/* Error / Status */}
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-susu-error/10 border border-susu-error/30">
-              <p className="text-sm text-susu-error">{error}</p>
+              <p className="text-xs text-susu-error break-all">{error}</p>
             </div>
           )}
 
