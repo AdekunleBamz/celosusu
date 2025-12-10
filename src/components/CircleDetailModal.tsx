@@ -120,10 +120,17 @@ export function CircleDetailModal({ circleAddress, userAddress, onClose }: Circl
 
   const handleApprove = () => {
     setActiveAction('approve');
-    approve(token, circleAddress, contribution * BigInt(100)); // Approve 100 cycles worth
+    // Approve enough for all cycles (totalCycles)
+    const approvalAmount = contribution * BigInt(Number(totalCycles) || 100);
+    approve(token, circleAddress, approvalAmount);
   };
 
   const handleContribute = () => {
+    // Double-check approval before contributing
+    if (needsApproval) {
+      handleApprove();
+      return;
+    }
     setActiveAction('contribute');
     contribute(circleAddress);
   };
@@ -295,20 +302,27 @@ export function CircleDetailModal({ circleAddress, userAddress, onClose }: Circl
                   {!hasContributed && (
                     <>
                       {needsApproval ? (
-                        <button
-                          onClick={handleApprove}
-                          disabled={isApproving || isConfirmingApprove}
-                          className="w-full btn-secondary"
-                        >
-                          {isApproving || isConfirmingApprove ? (
-                            <span className="flex items-center justify-center gap-2">
-                              <LoadingSpinner size="sm" />
-                              Approving...
-                            </span>
-                          ) : (
-                            `Approve ${tokenInfo?.symbol}`
-                          )}
-                        </button>
+                        <div className="space-y-2">
+                          <div className="p-3 rounded-xl bg-susu-gold/10 border border-susu-gold/30">
+                            <p className="text-sm text-susu-cream/80 text-center">
+                              ⚠️ First, approve {tokenInfo?.symbol} spending
+                            </p>
+                          </div>
+                          <button
+                            onClick={handleApprove}
+                            disabled={isApproving || isConfirmingApprove}
+                            className="w-full btn-primary"
+                          >
+                            {isApproving || isConfirmingApprove ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <LoadingSpinner size="sm" />
+                                {isApproving ? 'Approving...' : 'Confirming...'}
+                              </span>
+                            ) : (
+                              `1️⃣ Approve ${tokenInfo?.symbol} (One-time)`
+                            )}
+                          </button>
+                        </div>
                       ) : (
                         <button
                           onClick={handleContribute}
@@ -318,12 +332,12 @@ export function CircleDetailModal({ circleAddress, userAddress, onClose }: Circl
                           {isContributing || isConfirmingContribute ? (
                             <span className="flex items-center justify-center gap-2">
                               <LoadingSpinner size="sm" />
-                              Contributing...
+                              {isContributing ? 'Contributing...' : 'Confirming...'}
                             </span>
                           ) : !hasBalance ? (
-                            'Insufficient Balance'
+                            '❌ Insufficient Balance'
                           ) : (
-                            `Contribute ${formatTokenAmount(contribution)} ${tokenInfo?.symbol}`
+                            `💰 Contribute ${formatTokenAmount(contribution)} ${tokenInfo?.symbol}`
                           )}
                         </button>
                       )}
