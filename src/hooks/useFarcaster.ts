@@ -124,8 +124,8 @@ export function useFarcasterFrame() {
     }
   }, [connect, connectors, isConnected, isConnecting]);
 
-  // Connect wallet manually with chain enforcement
-  const connectWallet = useCallback(async (selectedConnector?: Connector) => {
+  // Connect wallet - defaults to WalletConnect for best UX
+  const connectWallet = useCallback(async () => {
     if (isConnecting) return;
     
     setError(null);
@@ -134,33 +134,32 @@ export function useFarcasterFrame() {
     try {
       // If no connectors available
       if (connectors.length === 0) {
-        setError('No wallet found. Please install a Web3 wallet or use WalletConnect');
+        setError('No wallet connectors available');
         setIsConnecting(false);
         return;
       }
       
-      let connector: Connector | undefined = selectedConnector;
-      
-      // If no specific connector selected, check if we're in Farcaster and auto-select
-      if (!connector) {
-        // Try Farcaster connector first
+      // In Farcaster miniapp, use Farcaster connector
+      if (context.isInFrame) {
         const farcasterConnector = connectors.find(c => c.id === 'farcaster');
-        if (farcasterConnector && context.isInFrame) {
-          connector = farcasterConnector;
-          console.log('Using Farcaster miniapp wallet');
-        } else {
-          // Let the calling component handle showing the modal
+        if (farcasterConnector) {
+          console.log('Using Farcaster wallet');
+          await connect({ connector: farcasterConnector, chainId: celoMainnet.id });
           setIsConnecting(false);
           return;
         }
       }
       
-      console.log('Attempting connection with:', connector.name);
+      // Otherwise, use WalletConnect (it has the best UX with built-in wallet selection)
+      const walletConnectConnector = connectors.find(c => c.id.includes('walletConnect'));
+      if (walletConnectConnector) {
+        console.log('Using WalletConnect');
+        await connect({ connector: walletConnectConnector, chainId: celoMainnet.id });
+      } else {
+        // Fallback to first available connector
+        await connect({ connector: connectors[0], chainId: celoMainnet.id });
+      }
       
-      // Connect to wallet with Celo mainnet chain ID
-      await connect({ connector, chainId: celoMainnet.id });
-      
-      // Note: Chain switching will be handled by the useEffect monitoring chain changes
     } catch (err: any) {
       console.error('Connect failed:', err);
       setError(err?.message || 'Connection failed. Please try again.');

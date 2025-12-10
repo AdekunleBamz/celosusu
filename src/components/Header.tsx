@@ -8,24 +8,13 @@ import { useTokenBalance } from '@/hooks/useContracts';
 import { CONTRACTS } from '@/config/contracts';
 import { formatTokenAmount } from '@/config/wagmi';
 import { LoadingSpinner } from './LoadingSpinner';
-import { WalletModal } from './WalletModal';
 
 export function Header() {
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const { address, isConnected } = useAccount();
   const { connectWallet, disconnect, isConnecting, error } = useFarcasterFrame();
   
   const { data: cusdBalance } = useTokenBalance(CONTRACTS.CUSD, address);
-
-  const handleConnectClick = () => {
-    setShowWalletModal(true);
-  };
-
-  const handleWalletSelect = (connector: any) => {
-    connectWallet(connector);
-    setShowWalletModal(false);
-  };
 
   const handleDisconnect = () => {
     disconnect();
@@ -105,7 +94,7 @@ export function Header() {
           ) : (
             <div className="flex flex-col items-end">
               <button
-                onClick={handleConnectClick}
+                onClick={connectWallet}
                 disabled={isConnecting}
                 className="btn-primary text-sm py-2 px-4 flex items-center gap-2"
               >
@@ -127,16 +116,6 @@ export function Header() {
           )}
         </div>
       </div>
-
-      {/* Wallet Modal */}
-      {showWalletModal && (
-        <WalletModal
-          onClose={() => setShowWalletModal(false)}
-          onConnect={handleWalletSelect}
-          isConnecting={isConnecting}
-          error={error}
-        />
-      )}
     </header>
   );
 }
