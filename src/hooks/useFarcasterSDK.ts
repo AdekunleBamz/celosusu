@@ -28,7 +28,7 @@ export function useFarcasterSDK() {
     const initSDK = async () => {
       try {
         // Check if we're in a Farcaster miniapp
-        const sdkContext = sdk.context;
+        const sdkContext = await sdk.context;
         
         if (sdkContext) {
           setContext({
