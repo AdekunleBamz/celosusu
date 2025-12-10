@@ -1,7 +1,6 @@
 'use client';
 
-import { useAppKit, useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
-import { useConnect, useDisconnect, useSwitchChain } from 'wagmi';
+import { useConnect, useDisconnect, useSwitchChain, useAccount } from 'wagmi';
 import { useCallback, useEffect, useState } from 'react';
 import { celoMainnet } from '@/config/appkit';
 import sdk from '@farcaster/miniapp-sdk';
@@ -9,127 +8,143 @@ import sdk from '@farcaster/miniapp-sdk';
 export function useWallet() {
   const [error, setError] = useState<string | null>(null);
   const [isInFarcaster, setIsInFarcaster] = useState(false);
-  const [farcasterReady, setFarcasterReady] = useState(false);
-  
-  // AppKit hooks
-  const { open, close } = useAppKit();
-  const { address, isConnected, status } = useAppKitAccount();
-  const { chainId } = useAppKitNetwork();
+  const [farcasterChecked, setFarcasterChecked] = useState(false);
   
   // Wagmi hooks
-  const { connect, connectors } = useConnect();
+  const { address, isConnected, chain } = useAccount();
+  const { connect, connectors, isPending: isConnecting } = useConnect();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
 
-  const isConnecting = status === 'connecting';
-
-  // Detect if we're inside Farcaster miniapp
+  // Detect if we're inside Farcaster miniapp on mount
   useEffect(() => {
     const detectFarcaster = async () => {
       try {
         const context = await sdk.context;
-        if (context) {
-          setIsInFarcaster(true);
-          setFarcasterReady(true);
-          console.log('Detected Farcaster miniapp context');
-        } else {
-          setFarcasterReady(true);
-        }
+        const inFarcaster = !!context;
+        setIsInFarcaster(inFarcaster);
+        console.log('Farcaster detection:', inFarcaster ? 'IN Farcaster' : 'NOT in Farcaster');
       } catch (err) {
-        // Not in Farcaster context
+        console.log('Farcaster detection error:', err);
         setIsInFarcaster(false);
-        setFarcasterReady(true);
       }
+      setFarcasterChecked(true);
     };
     detectFarcaster();
   }, []);
 
+  // Log available connectors
+  useEffect(() => {
+    console.log('Available connectors:', connectors.map(c => ({ id: c.id, name: c.name })));
+  }, [connectors]);
+
   // Monitor chain and enforce Celo mainnet
   useEffect(() => {
-    if (isConnected && chainId && chainId !== celoMainnet.id) {
+    if (isConnected && chain && chain.id !== celoMainnet.id) {
       setError('Please switch to Celo mainnet');
-      // Auto-attempt to switch chain
       try {
         switchChain?.({ chainId: celoMainnet.id });
       } catch (err) {
         console.error('Auto chain switch failed:', err);
       }
-    } else if (isConnected && chainId === celoMainnet.id) {
+    } else if (isConnected && chain?.id === celoMainnet.id) {
       setError(null);
     }
-  }, [isConnected, chainId, switchChain]);
+  }, [isConnected, chain, switchChain]);
 
-  // Connect wallet - use Farcaster in miniapp, AppKit modal otherwise
+  // Connect wallet
   const connectWallet = useCallback(async () => {
     setError(null);
-    console.log('connectWallet called, isInFarcaster:', isInFarcaster, 'connectors:', connectors.map(c => c.id));
     
-    // Check Farcaster context directly if not yet detected
+    console.log('=== Connect Wallet Called ===');
+    console.log('isInFarcaster:', isInFarcaster);
+    console.log('farcasterChecked:', farcasterChecked);
+    console.log('Connectors:', connectors.map(c => c.id));
+    
+    // If Farcaster not yet checked, check now
     let inFarcaster = isInFarcaster;
-    if (!farcasterReady) {
+    if (!farcasterChecked) {
       try {
         const context = await sdk.context;
         inFarcaster = !!context;
         setIsInFarcaster(inFarcaster);
-        setFarcasterReady(true);
+        setFarcasterChecked(true);
+        console.log('Farcaster check result:', inFarcaster);
       } catch (e) {
+        console.log('Farcaster check failed:', e);
         inFarcaster = false;
+        setFarcasterChecked(true);
       }
     }
     
-    if (inFarcaster) {
-      // In Farcaster, connect with Farcaster wallet
-      const farcasterConnector = connectors.find(c => c.id === 'farcaster');
-      console.log('Farcaster connector:', farcasterConnector);
-      
-      if (farcasterConnector) {
-        try {
-          console.log('Connecting with Farcaster wallet...');
-          connect({ connector: farcasterConnector, chainId: celoMainnet.id });
-          return;
-        } catch (err) {
-          console.error('Farcaster connect error:', err);
-          setError('Failed to connect Farcaster wallet');
-        }
+    // Find connectors
+    const farcasterConnector = connectors.find(c => c.id === 'farcaster');
+    const walletConnectConnector = connectors.find(c => c.id === 'walletConnect');
+    
+    console.log('Farcaster connector found:', !!farcasterConnector);
+    console.log('WalletConnect connector found:', !!walletConnectConnector);
+    
+    if (inFarcaster && farcasterConnector) {
+      // In Farcaster - use Farcaster wallet
+      console.log('Attempting Farcaster wallet connection...');
+      try {
+        connect(
+          { connector: farcasterConnector, chainId: celoMainnet.id },
+          {
+            onSuccess: (data) => console.log('Farcaster connect success:', data),
+            onError: (err) => {
+              console.error('Farcaster connect error:', err);
+              setError('Failed to connect. Please try again.');
+            },
+          }
+        );
+      } catch (err) {
+        console.error('Farcaster connect exception:', err);
+        setError('Connection failed');
+      }
+    } else if (walletConnectConnector) {
+      // Outside Farcaster - use WalletConnect
+      console.log('Attempting WalletConnect connection...');
+      try {
+        connect(
+          { connector: walletConnectConnector, chainId: celoMainnet.id },
+          {
+            onSuccess: (data) => console.log('WalletConnect success:', data),
+            onError: (err) => {
+              console.error('WalletConnect error:', err);
+              setError('Failed to connect. Please try again.');
+            },
+          }
+        );
+      } catch (err) {
+        console.error('WalletConnect exception:', err);
+        setError('Connection failed');
+      }
+    } else {
+      // Fallback to first available connector
+      const firstConnector = connectors[0];
+      if (firstConnector) {
+        console.log('Using fallback connector:', firstConnector.id);
+        connect({ connector: firstConnector, chainId: celoMainnet.id });
       } else {
-        console.log('Farcaster connector not found, falling back to AppKit');
-        // Fallback to AppKit if Farcaster connector not available
-        open({ view: 'Connect' });
+        setError('No wallet connectors available');
       }
-      return;
     }
-    
-    // Outside Farcaster, open AppKit modal
-    console.log('Opening AppKit modal');
-    open({ view: 'Connect' });
-  }, [isInFarcaster, farcasterReady, connectors, connect, open]);
-
-  // Open account modal for switching accounts or viewing details
-  const openAccount = useCallback(() => {
-    open({ view: 'Account' });
-  }, [open]);
-
-  // Open network modal for switching networks
-  const openNetwork = useCallback(() => {
-    open({ view: 'Networks' });
-  }, [open]);
+  }, [isInFarcaster, farcasterChecked, connectors, connect]);
 
   // Disconnect wallet
   const disconnectWallet = useCallback(() => {
     disconnect();
-    close();
-  }, [disconnect, close]);
+  }, [disconnect]);
 
   return {
-    address: address as `0x${string}` | undefined,
+    address,
     isConnected,
     isConnecting,
     isInFarcaster,
     error,
     connectWallet,
     disconnectWallet,
-    openAccount,
-    openNetwork,
   };
 }
 

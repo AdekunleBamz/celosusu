@@ -1,13 +1,12 @@
 'use client';
 
-import { cookieStorage, createStorage, http } from '@wagmi/core';
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { celo } from '@reown/appkit/networks';
-import type { AppKitNetwork } from '@reown/appkit/networks';
+import { cookieStorage, createStorage, http, createConfig } from '@wagmi/core';
+import { celo } from 'wagmi/chains';
+import { injected, walletConnect, coinbaseWallet } from 'wagmi/connectors';
 import { farcasterMiniApp } from '@farcaster/miniapp-wagmi-connector';
 
 // Get WalletConnect project ID from environment
-export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
 
 if (!projectId) {
   console.warn('WalletConnect project ID is not set. Please add NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID to your .env.local file');
@@ -20,29 +19,44 @@ export const celoMainnet = {
     default: {
       http: ['https://forno.celo.org'],
     },
+    public: {
+      http: ['https://forno.celo.org'],
+    },
   },
-} as const satisfies AppKitNetwork;
+};
 
-// Define the networks with proper tuple type
-export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [celoMainnet];
-
-// Create Farcaster miniapp connector
-const farcasterConnector = farcasterMiniApp();
-
-// Create Wagmi Adapter with AppKit + Farcaster connector
-export const wagmiAdapter = new WagmiAdapter({
+// Create wagmi config with Farcaster connector FIRST (highest priority)
+export const config = createConfig({
+  chains: [celoMainnet],
+  connectors: [
+    // Farcaster connector - first priority for miniapp
+    farcasterMiniApp(),
+    // WalletConnect for external wallets
+    walletConnect({
+      projectId,
+      metadata: {
+        name: 'CeloSusu',
+        description: 'Decentralized Savings Circles on Celo',
+        url: 'https://celosusu.vercel.app',
+        icons: ['https://celosusu.vercel.app/icon.png'],
+      },
+      showQrModal: true,
+    }),
+    // Coinbase Wallet
+    coinbaseWallet({
+      appName: 'CeloSusu',
+    }),
+    // Injected wallets (MetaMask, etc)
+    injected(),
+  ],
   storage: createStorage({
     storage: cookieStorage,
   }),
+  transports: {
+    [celoMainnet.id]: http('https://forno.celo.org'),
+  },
   ssr: true,
-  projectId: projectId || '',
-  networks,
-  // Add Farcaster connector as a custom connector
-  connectors: [farcasterConnector],
 });
 
-// Export the wagmi config
-export const config = wagmiAdapter.wagmiConfig;
-
-// Export Farcaster connector for direct access
-export { farcasterConnector };
+// For AppKit compatibility
+export const networks = [celoMainnet] as const;

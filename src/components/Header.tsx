@@ -9,7 +9,7 @@ import { LoadingSpinner } from './LoadingSpinner';
 
 export function Header() {
   const [showDropdown, setShowDropdown] = useState(false);
-  const { address, isConnected, isConnecting, error, connectWallet, disconnectWallet, openAccount } = useWallet();
+  const { address, isConnected, isConnecting, error, connectWallet, disconnectWallet } = useWallet();
   
   const { data: cusdBalance } = useTokenBalance(CONTRACTS.CUSD, address);
 
