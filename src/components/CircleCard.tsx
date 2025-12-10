@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   useCircleInfo, 
   useCircleMembers, 
@@ -8,6 +8,8 @@ import {
   useCurrentRecipient,
   useCycleTimeRemaining,
   useJoinCircle,
+  useTokenAllowance,
+  useApproveToken,
   CircleState,
   CIRCLE_STATE_LABELS 
 } from '@/hooks/useContracts';
@@ -26,6 +28,7 @@ interface CircleCardProps {
 export function CircleCard({ circleAddress, userAddress, showJoinButton }: CircleCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const [showSelfVerification, setShowSelfVerification] = useState(false);
+  const [pendingJoin, setPendingJoin] = useState(false);
   
   const { data: info, isLoading } = useCircleInfo(circleAddress);
   const { data: members } = useCircleMembers(circleAddress);
@@ -33,10 +36,45 @@ export function CircleCard({ circleAddress, userAddress, showJoinButton }: Circl
   const { data: currentRecipient } = useCurrentRecipient(circleAddress);
   const { data: timeRemaining } = useCycleTimeRemaining(circleAddress);
   
-  const { joinCircle, isPending: isJoining, isConfirming } = useJoinCircle();
+  const { joinCircle, isPending: isJoining, isConfirming, isSuccess: joinSuccess } = useJoinCircle();
+  
+  // Token approval hooks
+  const tokenAddress = info ? info[1] : undefined;
+  const contributionAmount = info ? info[2] : BigInt(0);
+  const cycleCount = info ? info[5] : BigInt(12);
+  
+  const { data: allowance, refetch: refetchAllowance } = useTokenAllowance(
+    tokenAddress as string,
+    userAddress,
+    circleAddress
+  );
+  const { approve, isPending: isApproving, isConfirming: isConfirmingApprove, isSuccess: approveSuccess } = useApproveToken();
   
   // Check if user is Self verified
   const isVerified = useSelfVerified(userAddress);
+  
+  // Calculate if approval is needed (approve enough for all cycles)
+  const totalRequired = contributionAmount * BigInt(Number(cycleCount) || 12);
+  const needsApproval = allowance !== undefined && allowance < totalRequired;
+
+  // After approval succeeds, join the circle
+  useEffect(() => {
+    if (approveSuccess && pendingJoin) {
+      refetchAllowance();
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        joinCircle(circleAddress);
+        setPendingJoin(false);
+      }, 500);
+    }
+  }, [approveSuccess, pendingJoin, circleAddress, joinCircle, refetchAllowance]);
+
+  // Reset pending state after join success
+  useEffect(() => {
+    if (joinSuccess) {
+      setPendingJoin(false);
+    }
+  }, [joinSuccess]);
 
   if (isLoading || !info) {
     return <div className="card shimmer h-40" />;
@@ -65,13 +103,28 @@ export function CircleCard({ circleAddress, userAddress, showJoinButton }: Circl
       return;
     }
     
-    // If verified, proceed to join
+    // If needs approval, approve first then join
+    if (needsApproval && tokenAddress) {
+      setPendingJoin(true);
+      approve(tokenAddress, circleAddress, totalRequired);
+      return;
+    }
+    
+    // If verified and approved, proceed to join
     joinCircle(circleAddress);
   };
 
   const handleVerified = () => {
     setShowSelfVerification(false);
-    // After verification, join the circle
+    
+    // After verification, check if approval is needed
+    if (needsApproval && tokenAddress) {
+      setPendingJoin(true);
+      approve(tokenAddress, circleAddress, totalRequired);
+      return;
+    }
+    
+    // If no approval needed, join directly
     joinCircle(circleAddress);
   };
 
@@ -163,10 +216,15 @@ export function CircleCard({ circleAddress, userAddress, showJoinButton }: Circl
         {showJoinButton && circleState === CircleState.OPEN && !isMember && (
           <button
             onClick={handleJoinClick}
-            disabled={isJoining || isConfirming}
+            disabled={isJoining || isConfirming || isApproving || isConfirmingApprove}
             className="w-full btn-primary flex items-center justify-center gap-2"
           >
-            {(isJoining || isConfirming) ? (
+            {(isApproving || isConfirmingApprove) ? (
+              <>
+                <LoadingSpinner size="sm" />
+                {isApproving ? 'Approving...' : 'Confirming Approval...'}
+              </>
+            ) : (isJoining || isConfirming) ? (
               <>
                 <LoadingSpinner size="sm" />
                 {isJoining ? 'Joining...' : 'Confirming...'}
@@ -175,6 +233,11 @@ export function CircleCard({ circleAddress, userAddress, showJoinButton }: Circl
               <>
                 <span>🛡️</span>
                 Verify & Join
+              </>
+            ) : needsApproval ? (
+              <>
+                <span>✓</span>
+                Approve & Join
               </>
             ) : (
               'Join Circle'
