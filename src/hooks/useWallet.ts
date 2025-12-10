@@ -2,13 +2,12 @@
 
 import { useAppKit, useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { useConnect, useDisconnect, useSwitchChain } from 'wagmi';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { celoMainnet } from '@/config/appkit';
 
 export function useWallet() {
   const [error, setError] = useState<string | null>(null);
   const [isInFarcaster, setIsInFarcaster] = useState(false);
-  const autoConnectAttempted = useRef(false);
   
   // AppKit hooks
   const { open, close } = useAppKit();
@@ -41,20 +40,6 @@ export function useWallet() {
     detectFarcaster();
   }, []);
 
-  // Auto-connect with Farcaster wallet when in miniapp
-  useEffect(() => {
-    if (isInFarcaster && !isConnected && !isConnecting && !autoConnectAttempted.current) {
-      autoConnectAttempted.current = true;
-      
-      // Find the Farcaster connector
-      const farcasterConnector = connectors.find(c => c.id === 'farcaster');
-      if (farcasterConnector) {
-        console.log('Auto-connecting with Farcaster wallet...');
-        connect({ connector: farcasterConnector, chainId: celoMainnet.id });
-      }
-    }
-  }, [isInFarcaster, isConnected, isConnecting, connectors, connect]);
-
   // Monitor chain and enforce Celo mainnet
   useEffect(() => {
     if (isConnected && chainId && chainId !== celoMainnet.id) {
@@ -75,7 +60,7 @@ export function useWallet() {
     setError(null);
     
     if (isInFarcaster) {
-      // In Farcaster, connect directly with Farcaster wallet
+      // In Farcaster, connect with Farcaster wallet (user will approve)
       const farcasterConnector = connectors.find(c => c.id === 'farcaster');
       if (farcasterConnector) {
         console.log('Connecting with Farcaster wallet...');
@@ -102,7 +87,6 @@ export function useWallet() {
   const disconnectWallet = useCallback(() => {
     disconnect();
     close();
-    autoConnectAttempted.current = false;
   }, [disconnect, close]);
 
   return {

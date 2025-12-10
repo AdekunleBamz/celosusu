@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useWallet } from '@/hooks/useWallet';
-import { useFarcasterSDK } from '@/hooks/useFarcasterSDK';
 import { useUserCircles, useOpenCircles, useTotalCircles } from '@/hooks/useContracts';
 import { Header } from '@/components/Header';
 import { CircleCard } from '@/components/CircleCard';
@@ -18,20 +17,11 @@ export default function Home() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   
   const { address, isConnected, isConnecting, connectWallet } = useWallet();
-  const { context: sdkContext, isReady: sdkReady } = useFarcasterSDK();
   
   // Fetch data
   const { data: userCircles, isLoading: loadingUserCircles, refetch: refetchUserCircles } = useUserCircles(address);
   const { data: openCircles, isLoading: loadingOpenCircles, refetch: refetchOpenCircles } = useOpenCircles(0, 50);
   const { data: totalCircles } = useTotalCircles();
-
-  // Auto-connect in Farcaster miniapp
-  useEffect(() => {
-    if (sdkContext.isSDK && sdkReady && !isConnected && !isConnecting) {
-      console.log('In Farcaster miniapp, auto-connecting wallet...');
-      connectWallet();
-    }
-  }, [sdkContext.isSDK, sdkReady, isConnected, isConnecting, connectWallet]);
 
   const handleCreateSuccess = () => {
     setShowCreateModal(false);
