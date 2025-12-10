@@ -31,11 +31,21 @@ export const metadata: Metadata = {
     images: ['https://celosusu.vercel.app/og-image.png'],
   },
   other: {
+    'fc:miniapp': JSON.stringify({
+      version: "1",
+      imageUrl: "https://celosusu.vercel.app/og-image.png",
+      button: {
+        title: "🚀 Join Circle",
+        action: {
+          type: "launch_frame",
+          name: "CeloSusu",
+          url: "https://celosusu.vercel.app",
+          splashImageUrl: "https://celosusu.vercel.app/icon.png",
+          splashBackgroundColor: "#1A1207"
+        }
+      }
+    }),
     'fc:frame': 'vNext',
-    'fc:frame:image': 'https://celosusu.vercel.app/og-image.png',
-    'fc:frame:button:1': 'Join Savings Circle',
-    'fc:frame:button:1:action': 'link',
-    'fc:frame:button:1:target': 'https://celosusu.vercel.app',
   },
 };
 
